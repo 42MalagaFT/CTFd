@@ -251,8 +251,8 @@ def register():
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
-        email_address = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "").strip()
+        email_address = request.form.get("email", f"{name}@nomail.com").strip().lower()
+        password = request.form.get("password", "J4me2_wasHERE!").strip()
 
         website = request.form.get("website")
         affiliation = request.form.get("affiliation")
@@ -264,18 +264,6 @@ def register():
         names = (
             Users.query.add_columns(Users.name, Users.id).filter_by(name=name).first()
         )
-        emails = (
-            Users.query.add_columns(Users.email, Users.id)
-            .filter_by(email=email_address)
-            .first()
-        )
-        pass_short = len(password) == 0
-        pass_long = len(password) > 128
-        valid_email = validators.validate_email(email_address)
-        team_name_email_check = validators.validate_email(name)
-
-        password_min_length = int(get_config("password_min_length", default=0))
-        pass_min = len(password) < password_min_length
 
         if get_config("registration_code"):
             if (
@@ -330,26 +318,8 @@ def register():
             else:
                 valid_bracket = True
 
-        if not valid_email:
-            errors.append(_l("Please enter a valid email address"))
-        if email.check_email_is_whitelisted(email_address) is False:
-            errors.append(_l("Your email address is not from an allowed domain"))
-        if email.check_email_is_blacklisted(email_address) is True:
-            errors.append(_l("Your email address is not from an allowed domain"))
         if names:
             errors.append(_l("That user name is already taken"))
-        if team_name_email_check is True:
-            errors.append(_l("Your user name cannot be an email address"))
-        if emails:
-            errors.append(_l("That email has already been used"))
-        if pass_short:
-            errors.append(_l("Pick a longer password"))
-        if password_min_length and pass_min:
-            errors.append(
-                _l(f"Password must be at least {password_min_length} characters")
-            )
-        if pass_long:
-            errors.append(_l("Pick a shorter password"))
         if name_len:
             errors.append(_l("Pick a longer user name"))
         if valid_website is False:
@@ -368,8 +338,6 @@ def register():
                 "register.html",
                 errors=errors,
                 name=request.form["name"],
-                email=request.form["email"],
-                password=request.form["password"],
             )
         else:
             with app.app_context():
